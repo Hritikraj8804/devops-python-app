@@ -166,3 +166,5 @@ Here are some GitHub screenshots for **Secrets** and **Variables** setup:
 * Always **test workflows locally** (via Docker or `act`) before pushing.
 * Start small: run tests first, then add deployment steps.
 
+
+Dev.to Article: https://lnkd.in/gX8En2iV
