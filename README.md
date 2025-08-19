@@ -3,7 +3,6 @@
 
 This guide explains how to use **GitHub Actions** with **Docker** to automate your build, test, and deployment process.
 
----
 
 ## 🔹 What are GitHub Actions?
 
@@ -167,4 +166,3 @@ Here are some GitHub screenshots for **Secrets** and **Variables** setup:
 * Always **test workflows locally** (via Docker or `act`) before pushing.
 * Start small: run tests first, then add deployment steps.
 
----# devops-python-app
