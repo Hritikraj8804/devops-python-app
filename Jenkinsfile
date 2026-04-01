@@ -1,61 +1,44 @@
 pipeline {
-    agent any
-
+    agent {label 'blue'}
+    
     stages {
-        stage('Clone Repo') {
-            steps {
-                git branch: 'main', 
-                    url: 'https://github.com/Hritikraj8804/devops-python-app.git'
+        stage('code fork') {
+            steps{
+                echo 'code cloning'
+                git url: 'https://github.com/Hritikraj8804/devops-python-app.git', branch: 'main'
+                echo 'code clone complete'
             }
         }
-        stage('Build') {
-            steps {
-                bat 'echo Building app on Windows...'
+        stage('code built') {
+            steps{
+                echo 'code building'
+                sh "docker build -t python-app:latest ."
             }
         }
-
-        stage('Setup Environment') {
+        stage('code push') {
             steps {
-                bat '''
-                python3 -m venv venv
-                . venv/bin/activate
-                pip install --upgrade pip
-                pip install -r requirements.txt
-                '''
-            }
-        }
+                echo 'pushing to docker hub'
 
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerHubCred',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
 
-        stage('Build Docker Image') {
-            steps {
-                bat 'docker build -t devops-python-app:latest .'
-            }
-        }
-
-        stage('Docker Login & Push') {
-            steps {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-cred',
-                                                  usernameVariable: 'DOCKER_USER',
-                                                  passwordVariable: 'DOCKER_PASS')]) {
-                        bat """
-                            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-                            docker build -t devops-python-app:latest .
-                            docker tag devops-python-app:latest %DOCKER_USER%/devops-python-app:latest
-                            docker push %DOCKER_USER%/devops-python-app:latest
-                        """
-                    }
-            }
-        }
-
-        stage('Deploy Application') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-cred',
-                                                  usernameVariable: 'DOCKER_USER',
-                                                  passwordVariable: 'DOCKER_PASS')]) {
-                    bat """
-                    docker run -d -p 5000:5000 --name devops-python-app --rm %DOCKER_USER%/devops-python-app:latest
-                    """
+                    sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    
+                    docker tag python-app:latest $DOCKER_USER/python-app:latest
+                    
+                    docker push $DOCKER_USER/python-app:latest
+                    '''
                 }
+            }
+        }
+        stage('code deploy') {
+            steps{
+                echo 'code deploying'
+                sh "docker compose up -d"
             }
         }
     }
